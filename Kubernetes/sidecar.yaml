@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidecar-logmanagement
+  labels:
+    app: sidecar-logmanagement
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sidecar_app1_node1
+  template:
+    metadata:
+      labels:
+        app: sidecar_app1_node1
+    spec:
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+      containers:
+        - name: sidecar
+          image: sidecar
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /project/logs
+          env:
+            - name: FILENAME
+              value: "/project/logs/server.log"
+            - name: LINE_REGEX
+              value: "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} .*"
+            - name: TIME_PER_LOG
+              value: "100"
+            - name: URL_SERVICE
+              value: "pulsar://pulsar-mini-proxy:6650"
+            - name: TECHNOLOGY
+              value: "xviewer"
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: INSTANCE
+              value: "1"
+        - name: stubapp
+          image: stubapp
+          imagePullPolicy: Never
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /logs

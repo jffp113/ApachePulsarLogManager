@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sink-logmanagement
+  labels:
+    app: sink-logmanagement
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sink-logmanagement
+  template:
+    metadata:
+      labels:
+        app: sink-logmanagement
+    spec:
+      containers:
+        - name: sink
+          image: sink
+          imagePullPolicy: Never
+          env:
+            - name: SINK_TOPIC
+              value: "persistent://public/default/parsed_logs"
+            - name: URL_SERVICE
+              value: "pulsar://pulsar-mini-proxy:6650"

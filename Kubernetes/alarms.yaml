@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-alarm-logmanagement
+  labels:
+    app: email-alarm-logmanagement
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-alarm-logmanagement
+  template:
+    metadata:
+      labels:
+        app: email-alarm-logmanagement
+    spec:
+      containers:
+        - name: emailalarm
+          image: emailalarm
+          imagePullPolicy: Never
+          env:
+            - name: ALARM_TOPIC
+              value: "persistent://public/default/severe-logs"
+            - name: URL_SERVICE
+              value: "pulsar://pulsar-mini-proxy:6650"
