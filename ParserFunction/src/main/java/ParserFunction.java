@@ -1,17 +1,16 @@
 import org.apache.pulsar.client.api.*;
-import org.apache.pulsar.client.impl.schema.JSONSchema;
 import org.apache.pulsar.functions.api.Context;
 import org.apache.pulsar.functions.api.Function;
 import org.slf4j.Logger;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+//This function parses log entries from Xviewer Server
 public class ParserFunction implements Function<String, Void> {
 
+    //E.g 2021-10-04 08:42:34,994 INFO  [com.crossjoin...PersistentAlarmChecker] (Thread-122) ALARM CHECK COMPLETED
     public static final String FIRST_LINE_STRING_REGEX =
                 "^(20[0-9]{2}-[0-9]{2}-[0-9]{2})\\s+([0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3})\\s+(INFO|WARN|DEBUG|ERROR)\\s+(\\[.*\\])\\s+(\\((?:[^)(]+|\\((?:[^)(]+|\\([^)(]*\\))*\\))*\\))\\s+([\\S\\s]*)";
 
@@ -23,8 +22,6 @@ public class ParserFunction implements Function<String, Void> {
     public static final String PARSED_TOPIC = "parsed_logs";
     public static final String ERROR_LOGS = "unparsed_logs";
     public static final String EXCEPTION_LOGS = "exception_logs";
-
-    public static final String COUNTER_NAME = "LOG_COUNTER";
 
     private final Pattern newLogLinePattern = Pattern.compile(FIRST_LINE_STRING_REGEX);
 
@@ -85,6 +82,7 @@ public class ParserFunction implements Function<String, Void> {
         return null;
     }
 
+    //Send entries to the Apache Pulsar Parsed Topic with a Json schema for the LogEntry
     private void sendParsedLogEntry(LogEntry entry, Context context, Logger log) throws Exception{
         TypedMessageBuilder<LogEntry> msgBuilder =
                 context.newOutputMessage(PARSED_TOPIC,LOG_ENTRY_SCHEMA);
@@ -92,6 +90,7 @@ public class ParserFunction implements Function<String, Void> {
         log.info("Published log entry with message id: " + msgId);
     }
 
+    //Send entries to the Apache Pulsar exception Topic with a Json schema for the LogEntry
     private void sendExceptionLogEntry(LogEntry entry, Context context, Logger log) throws Exception{
         TypedMessageBuilder<LogEntry> msgBuilder =
                 context.newOutputMessage(EXCEPTION_LOGS,LOG_ENTRY_SCHEMA);
@@ -99,6 +98,7 @@ public class ParserFunction implements Function<String, Void> {
         log.info("Published log entry with message id: " + msgId);
     }
 
+    //Send entries to the Apache Pulsar unparsed Topic with a Json schema for the LogEntry
     private void sendNotParsedLogEntry(String input, Context context, Logger log){
         try{
             TypedMessageBuilder<String> msgBuilder =

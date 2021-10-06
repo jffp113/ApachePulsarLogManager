@@ -1,4 +1,4 @@
-import sidecar.Sidecar;
+import extractor.Extractor;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -14,7 +14,7 @@ public class Main {
         int timeBetweenLineReading = Integer.parseInt(System.getenv("TIME_PER_LOG"));
         //int nodeNumber = Integer.parseInt(System.getenv("NODE_NUMBER"));
 
-        Sidecar c =  Sidecar.builder()
+        Extractor c =  Extractor.builder()
                             .setFilepath(filePath)
                             .setLineRegex(lineRegex)
                             .setTimeBetweenLineReading(timeBetweenLineReading)

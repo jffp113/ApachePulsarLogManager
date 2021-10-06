@@ -1,5 +1,7 @@
 package Alarm;
 
+import Alarm.emailApi.EmailSender;
+import Alarm.emailApi.MockEmailSender;
 import org.apache.pulsar.client.api.*;
 
 public class EmailAlarm implements Alarm{
@@ -48,6 +50,7 @@ public class EmailAlarm implements Alarm{
                     .newConsumer(Schema.JSON(LogEntry.class))
                     .topic(conf.getAlarmTopic())
                     .subscriptionName("email_alarm")
+                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     .subscriptionType(SubscriptionType.Shared)
                     .batchReceivePolicy(BatchReceivePolicy.DEFAULT_POLICY)
                     .subscribe();
@@ -57,11 +60,11 @@ public class EmailAlarm implements Alarm{
 
     public void start() throws Exception {
         Consumer<LogEntry> consumer = getProducer();
+        EmailSender emailSender = new MockEmailSender();
         while(keepPulling){
             Messages<LogEntry> logEntries = consumer.batchReceive();
-            for(Message<LogEntry> e : logEntries){
-                System.out.println("Sending Email for: " + e.getValue().getRawMessage());
-            }
+            emailSender.sendEmail(logEntries);
+            consumer.acknowledge(logEntries);
         }
     }
 

@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sidecar-logmanagement
+  name: extractor-logmanagement
   labels:
-    app: sidecar-logmanagement
+    app: extractor-logmanagement
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sidecar_app1_node1
+      app: extractor_app1_node1
   template:
     metadata:
       labels:
-        app: sidecar_app1_node1
+        app: extractor_app1_node1
     spec:
       volumes:
         - name: logs-volume
           emptyDir: {}
       containers:
-        - name: sidecar
-          image: sidecar
+        - name: extractor
+          image: extractor
           imagePullPolicy: Never
           ports:
             - name: http

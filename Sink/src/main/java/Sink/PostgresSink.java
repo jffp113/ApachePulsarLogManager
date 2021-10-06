@@ -52,6 +52,7 @@ public class PostgresSink implements Sink {
                     .newConsumer(Schema.JSON(LogEntry.class))
                     .topic(conf.getSinkTopic())
                     .subscriptionName("postgres_sink")
+                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     .subscriptionType(SubscriptionType.Shared)
                     .batchReceivePolicy(BatchReceivePolicy.DEFAULT_POLICY)
                     .subscribe();
@@ -61,14 +62,15 @@ public class PostgresSink implements Sink {
 
     public void start() throws Exception {
         Consumer<LogEntry> consumer = getProducer();
-        try (Connection conn = DriverManager.getConnection(
-                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer")){
-
-            while(keepPulling){
-            Messages<LogEntry> logEntries = consumer.batchReceive();
-            for(Message<LogEntry> msg : logEntries){
-                //TODO isolate the database insertion
-                LogEntry entry = msg.getValue();
+        Connection conn = DriverManager.getConnection(
+                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
+        LogEntry entry = null;
+        while(keepPulling){
+            try {
+                Messages<LogEntry> logEntries = consumer.batchReceive();
+                for(Message<LogEntry> msg : logEntries){
+                    //TODO isolate the database insertion
+                    entry = msg.getValue();
 
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
                     //TODO remove string concatenation
@@ -77,7 +79,6 @@ public class PostgresSink implements Sink {
                     String sql = "INSERT INTO facts.xviewerlogs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     PreparedStatement st = conn.prepareStatement(sql);
                     st.setTimestamp(1, Timestamp.valueOf(t));
-                    //st.setString(1, "2015-01-10 00:51:14"); //timest
                     st.setString(2, entry.getEnvironment()); // env
                     st.setString(3, entry.getTechnology()); // tech
                     st.setString(4, entry.getInstance()); // instance
@@ -91,11 +92,16 @@ public class PostgresSink implements Sink {
                     st.setString(12, entry.getRawMessage()); // raw message
                     st.executeUpdate();
 
+                    //Ack the message
+                    consumer.acknowledge(msg);
+                }
+            } catch (SQLException e) {
+                System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
+                System.err.format("Entry uuid %s value %s\n",entry.getUuid(),entry.getRawMessage());
             }
         }
-        } catch (SQLException e) {
-            System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
-        }
+        conn.close();
+
     }
 
 

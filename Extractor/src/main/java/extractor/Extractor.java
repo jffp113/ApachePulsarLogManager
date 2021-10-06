@@ -1,4 +1,4 @@
-package sidecar;
+package extractor;
 
 import org.apache.pulsar.client.api.*;
 
@@ -8,7 +8,7 @@ import java.io.FileReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Sidecar {
+public class Extractor {
 
     private static final String TOPIC_PREFIX = "rawlogs-";
 
@@ -23,11 +23,11 @@ public class Sidecar {
 
     boolean keepReading;
 
-    public static SidecarBuilder builder(){
-        return new SidecarBuilder();
+    public static ExtractorBuilder builder(){
+        return new ExtractorBuilder();
     }
 
-    protected Sidecar(Conf conf){
+    protected Extractor(Conf conf){
         this.conf = conf;
         client = null;
         producer = null;

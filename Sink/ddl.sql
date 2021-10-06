@@ -1,3 +1,5 @@
+-- DROP TABLE facts.xviewerlogs
+
 CREATE TABLE facts.xviewerlogs
 (
     timest timestamp without time zone NOT NULL,

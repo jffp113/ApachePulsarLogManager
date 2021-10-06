@@ -1,4 +1,4 @@
-package sidecar;
+package extractor;
 
 public class Conf {
 
@@ -11,8 +11,6 @@ public class Conf {
 
     //Time between new line reading
     private int timeBetweenLineReading;
-
-
 
     private String environment;
     private String instance;
