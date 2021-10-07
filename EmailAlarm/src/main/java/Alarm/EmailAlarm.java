@@ -4,6 +4,8 @@ import Alarm.emailApi.EmailSender;
 import Alarm.emailApi.MockEmailSender;
 import org.apache.pulsar.client.api.*;
 
+import java.util.concurrent.TimeUnit;
+
 public class EmailAlarm implements Alarm{
 
     //Sidecar configuration
@@ -16,6 +18,12 @@ public class EmailAlarm implements Alarm{
     Consumer<LogEntry> producer;
 
     boolean keepPulling;
+
+    public static final BatchReceivePolicy ALARM_BATCH_POLICY = BatchReceivePolicy.builder()
+                                                                        .maxNumBytes(10 * 1024 * 1024)
+                                                                        .maxNumMessages(-1)
+                                                                        .timeout(5,TimeUnit.SECONDS)
+                                                                        .build();
 
     public static AlarmBuilder builder(){
         return new AlarmBuilder();
@@ -52,7 +60,7 @@ public class EmailAlarm implements Alarm{
                     .subscriptionName("email_alarm")
                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     .subscriptionType(SubscriptionType.Shared)
-                    .batchReceivePolicy(BatchReceivePolicy.DEFAULT_POLICY)
+                    .batchReceivePolicy(ALARM_BATCH_POLICY)
                     .subscribe();
 
         return producer;
@@ -63,7 +71,9 @@ public class EmailAlarm implements Alarm{
         EmailSender emailSender = new MockEmailSender();
         while(keepPulling){
             Messages<LogEntry> logEntries = consumer.batchReceive();
-            emailSender.sendEmail(logEntries);
+            if(logEntries.size() != 0){
+                emailSender.sendEmail(logEntries);
+            }
             consumer.acknowledge(logEntries);
         }
     }
