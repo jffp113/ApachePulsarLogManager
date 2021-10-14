@@ -1,10 +1,8 @@
 package Alarm.emailApi;
 
-import Alarm.LogEntry;
+import Alarm.entities.LogEntry;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
-
-import java.util.List;
 
 public class MockEmailSender implements EmailSender{
 

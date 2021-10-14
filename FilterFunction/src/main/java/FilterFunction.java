@@ -1,5 +1,5 @@
-import java.util.ArrayList;
-import java.util.Arrays;
+import entities.LogEntry;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;

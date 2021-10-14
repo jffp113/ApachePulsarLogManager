@@ -14,6 +14,7 @@ CREATE TABLE facts.xviewerlogs
     threadName text COLLATE pg_catalog."default" NOT NULL,
     category text COLLATE pg_catalog."default" NOT NULL,
     message text COLLATE pg_catalog."default" NOT NULL,
+    properties text COLLATE pg_catalog."default" NOT NULL,
     rawMessage text COLLATE pg_catalog."default" NOT NULL,
 
     CONSTRAINT uptime_pkey PRIMARY KEY (timest, enviroment, technology, instance,uuid)

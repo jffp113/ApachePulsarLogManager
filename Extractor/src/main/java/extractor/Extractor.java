@@ -77,7 +77,7 @@ public class Extractor {
 
             if(next == null){
                 if(buffer.length() != 0){
-                    send(producer,buffer.toString());
+                    trySend(producer,buffer.toString());
                     buffer = new StringBuilder();
                 }
                 //wait until for more lines
@@ -88,7 +88,7 @@ public class Extractor {
             Matcher m = newLogLinePattern.matcher(next);
             if(m.matches()){
                 if(buffer.length() != 0){
-                    send(producer,buffer.toString());
+                    trySend(producer,buffer.toString());
                     //Simulate log reading
                     Thread.sleep(conf.getTimeBetweenLineReading());
                     buffer = new StringBuilder();
@@ -96,6 +96,18 @@ public class Extractor {
             }
             buffer.append(next)
                     .append("\n");
+        }
+    }
+
+    public void trySend(Producer<String> producer, String value) {
+        boolean sent = false;
+        while(!sent) {
+            try {
+                send(producer,value);
+                sent = true;
+            } catch (PulsarClientException ignored) {
+                System.out.println("Retrying producing messages");
+            }
         }
     }
 

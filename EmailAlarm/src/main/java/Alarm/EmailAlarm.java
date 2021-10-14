@@ -2,6 +2,7 @@ package Alarm;
 
 import Alarm.emailApi.EmailSender;
 import Alarm.emailApi.MockEmailSender;
+import Alarm.entities.LogEntry;
 import org.apache.pulsar.client.api.*;
 
 import java.util.concurrent.TimeUnit;

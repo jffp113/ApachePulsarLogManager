@@ -1,13 +1,13 @@
 package Sink;
 
-import Sink.entities.LogEntry;
+import Sink.entities.IndexerMetric;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class PostgresSink implements Sink {
+public class PostgresMetricSink implements Sink {
 
     //Sidecar configuration
     private final Conf conf;
@@ -16,7 +16,7 @@ public class PostgresSink implements Sink {
     PulsarClient client;
 
     //Consumer to read logs
-    Consumer<LogEntry> producer;
+    Consumer<IndexerMetric> producer;
 
     boolean keepPulling;
 
@@ -24,7 +24,7 @@ public class PostgresSink implements Sink {
         return new SinkBuilder();
     }
 
-    protected PostgresSink(Conf conf){
+    protected PostgresMetricSink(Conf conf){
         this.conf = conf;
         client = null;
         producer = null;
@@ -44,13 +44,13 @@ public class PostgresSink implements Sink {
             return client;
     }
 
-    private synchronized Consumer<LogEntry> getProducer() throws PulsarClientException {
+    private synchronized Consumer<IndexerMetric> getProducer() throws PulsarClientException {
         if (producer != null) {
             return producer;
         }
 
         producer = getClient()
-                    .newConsumer(Schema.JSON(LogEntry.class))
+                    .newConsumer(Schema.JSON(IndexerMetric.class))
                     .topic(conf.getSinkTopic())
                     .subscriptionName("postgres_sink")
                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
@@ -62,40 +62,28 @@ public class PostgresSink implements Sink {
     }
 
     public void start() throws Exception {
-        Consumer<LogEntry> consumer = getProducer();
+        Consumer<IndexerMetric> consumer = getProducer();
         Connection conn = DriverManager.getConnection(
                 "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
-        LogEntry entry = null;
+        IndexerMetric entry = null;
         while(keepPulling){
             try {
-                Messages<LogEntry> logEntries = consumer.batchReceive();
-                for(Message<LogEntry> msg : logEntries){
+                Messages<IndexerMetric> logEntries = consumer.batchReceive();
+                for(Message<IndexerMetric> msg : logEntries){
                     //TODO isolate the database insertion
                     entry = msg.getValue();
 
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
                     //TODO remove string concatenation
-                    LocalDateTime t = LocalDateTime.parse(entry.getDate() + " " + entry.getTime(),formatter);
-                    String sql = "INSERT INTO facts.xviewerlogs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    LocalDateTime t = LocalDateTime.parse(entry.getTimestamp(),formatter);
+                    String sql = "INSERT INTO facts.xviewer_indexer_metrics VALUES (?, ?, ?, ?)";
+
                     PreparedStatement st = conn.prepareStatement(sql);
                     st.setTimestamp(1, Timestamp.valueOf(t));
-                    st.setString(2, entry.getEnvironment()); // env
-                    st.setString(3, entry.getTechnology()); // tech
-                    st.setString(4, entry.getInstance()); // instance
-                    st.setString(5, entry.getUuid()); // uuid
-                    st.setString(6, entry.getFileName()); // filename
-                    st.setLong(7, entry.getSeqNumber()); // seqNumber
-                    st.setString(8, entry.getSeverity()); // severity
-                    st.setString(9, entry.getThreadName()); // threadName
-                    st.setString(10, entry.getCategory()); // category
-                    st.setString(11, entry.getMessage()); // message
-                    if(entry.getProperties() == null) {
-                        st.setString(12, "");// properties
-                    } else{
-                        st.setString(12, entry.getProperties()); // properties
-                    }
+                    st.setString(2, entry.getMetricType());
+                    st.setString(3, entry.getIndexer());
+                    st.setLong(4, entry.getMetricTime());
 
-                    st.setString(13, entry.getRawMessage()); // raw message
                     st.executeUpdate();
 
                     //Ack the message
@@ -103,7 +91,6 @@ public class PostgresSink implements Sink {
                 }
             } catch (SQLException e) {
                 System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
-                System.err.format("Entry uuid %s value %s\n",entry.getUuid(),entry.getRawMessage());
             }
         }
         conn.close();

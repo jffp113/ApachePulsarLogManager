@@ -1,3 +1,6 @@
+import com.google.gson.Gson;
+import entities.IndexProperty;
+import entities.LogEntry;
 import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.functions.api.Context;
 import org.apache.pulsar.functions.api.Function;
@@ -16,7 +19,13 @@ public class ParserFunction implements Function<String, Void> {
 
     public static final String IS_EXCEPTION = "\\tat.*";
 
-    public static final Schema<LogEntry> LOG_ENTRY_SCHEMA = Schema.JSON(LogEntry.class);//JSONSchema.of(LogEntry.class);
+    private static final String ENQUEING_REGEX = "^Enqueing indexing request \\[(.*)\\][\\r\\n|\\r|\\n]";
+    private static final String DEQUEUED_REGEX = "^\\d*-> Dequeued request \\[(.*)\\] executing in worker now![\\r\\n|\\r|\\n]";
+
+    private static final String START_INDEX_REGEX = "^(\\d*)-> Notify start processing of index (.*)[\\r\\n|\\r|\\n]";;
+    private static final String END_INDEX_REGEX = "^(\\d*)-> Notify finished processing of index (.*)[\\r\\n|\\r|\\n]";
+
+    public static final Schema<LogEntry> LOG_ENTRY_SCHEMA = Schema.JSON(LogEntry.class);//JSONSchema.of(entities.LogEntry.class);
     public static final Schema<String> STRING_SCHEMA = Schema.STRING;
 
     public static final String PARSED_TOPIC = "parsed_logs";
@@ -49,6 +58,81 @@ public class ParserFunction implements Function<String, Void> {
         return match.find();
     }
 
+
+    //Parse indexes information
+    //E.g
+    // Queuing time:
+    //      - Enqueing indexing request [236533]
+    //      - Dequeued request [236533] executing in worker now!
+    //Indexing time:
+    //      - 440-> Notify start processing of index 236533
+    //      - 440-> Notify finished processing of index 236533
+    private final Pattern enqueingIndexingPattern = Pattern.compile(ENQUEING_REGEX);
+    private final Pattern dequeuedIndexingPattern = Pattern.compile(DEQUEUED_REGEX);
+    private final Pattern startIndexingPattern = Pattern.compile(START_INDEX_REGEX);
+    private final Pattern endIndexingPattern = Pattern.compile(END_INDEX_REGEX);
+    private boolean parseIndexProperties(LogEntry entry){
+        String matchingLine = entry.getMessage();
+
+        if(matchEnqueingIndexing(entry,matchingLine)){
+            return true;
+        } else if (matchingDequeuedIndexing(entry,matchingLine)){
+            return true;
+        } else if (matchingStartProcessingIndexing(entry, matchingLine)) {
+            return true;
+        } else if (matchingEndProcessingIndexing(entry, matchingLine)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    private final Gson gson = new Gson();
+    private boolean matchEnqueingIndexing(LogEntry entry, String line){
+        Matcher match = enqueingIndexingPattern.matcher(line);
+        if(!match.matches()){
+            return false;
+        }
+        IndexProperty prop = IndexProperty.NewEnqueingIndexingProperty(match.group(1),entry.getUuid(),
+                entry.getDate() + " " + entry.getTime());
+        entry.setProperties(gson.toJson(prop));
+        return true;
+    }
+
+    private boolean matchingDequeuedIndexing(LogEntry entry, String line){
+        Matcher match = dequeuedIndexingPattern.matcher(line);
+        if(!match.matches()){
+            return false;
+        }
+        IndexProperty prop = IndexProperty.NewDequeuedIndexingProperty(match.group(1),entry.getUuid(),
+                entry.getDate() + " " + entry.getTime());
+        entry.setProperties(gson.toJson(prop));
+        return true;
+    }
+
+    private boolean matchingStartProcessingIndexing(LogEntry entry, String line){
+        Matcher match = startIndexingPattern.matcher(line);
+        if(!match.matches()){
+            return false;
+        }
+        IndexProperty prop = IndexProperty.StartProcessingIndexingProperty(match.group(2),match.group(1),entry.getUuid(),
+                entry.getDate() + " " + entry.getTime());
+        entry.setProperties(gson.toJson(prop));
+        return true;
+    }
+
+    private boolean matchingEndProcessingIndexing(LogEntry entry, String line){
+        Matcher match = endIndexingPattern.matcher(line);
+        if(!match.matches()){
+            return false;
+        }
+        IndexProperty prop = IndexProperty.EndProcessingIndexingProperty(match.group(2),match.group(1),entry.getUuid(),
+                entry.getDate() + " " + entry.getTime());
+        entry.setProperties(gson.toJson(prop));
+        return true;
+    }
+
     public Void process(String input, Context context) {
         //Used to send logs to a specified topic
         Logger log = context.getLogger();
@@ -69,6 +153,8 @@ public class ParserFunction implements Function<String, Void> {
             entry.setFileName(properties.get("FILENAME"));
 
             parseLogEntry(entry,input);
+            boolean propertiesParsed = parseIndexProperties(entry);
+            log.info("Index properties available:" + propertiesParsed);
             sendParsedLogEntry(entry,context,log);
             if(isException(input)){
                 sendExceptionLogEntry(entry,context,log);
@@ -82,7 +168,7 @@ public class ParserFunction implements Function<String, Void> {
         return null;
     }
 
-    //Send entries to the Apache Pulsar Parsed Topic with a Json schema for the LogEntry
+    //Send entries to the Apache Pulsar Parsed Topic with a Json schema for the entities.LogEntry
     private void sendParsedLogEntry(LogEntry entry, Context context, Logger log) throws Exception{
         TypedMessageBuilder<LogEntry> msgBuilder =
                 context.newOutputMessage(PARSED_TOPIC,LOG_ENTRY_SCHEMA);
@@ -90,7 +176,7 @@ public class ParserFunction implements Function<String, Void> {
         log.info("Published log entry with message id: " + msgId);
     }
 
-    //Send entries to the Apache Pulsar exception Topic with a Json schema for the LogEntry
+    //Send entries to the Apache Pulsar exception Topic with a Json schema for the entities.LogEntry
     private void sendExceptionLogEntry(LogEntry entry, Context context, Logger log) throws Exception{
         TypedMessageBuilder<LogEntry> msgBuilder =
                 context.newOutputMessage(EXCEPTION_LOGS,LOG_ENTRY_SCHEMA);
@@ -98,7 +184,7 @@ public class ParserFunction implements Function<String, Void> {
         log.info("Published log entry with message id: " + msgId);
     }
 
-    //Send entries to the Apache Pulsar unparsed Topic with a Json schema for the LogEntry
+    //Send entries to the Apache Pulsar unparsed Topic with a Json schema for the entities.LogEntry
     private void sendNotParsedLogEntry(String input, Context context, Logger log){
         try{
             TypedMessageBuilder<String> msgBuilder =

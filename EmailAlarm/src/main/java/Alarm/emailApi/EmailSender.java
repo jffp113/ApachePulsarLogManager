@@ -1,6 +1,6 @@
 package Alarm.emailApi;
 
-import Alarm.LogEntry;
+import Alarm.entities.LogEntry;
 import org.apache.pulsar.client.api.Messages;
 
 public interface EmailSender {

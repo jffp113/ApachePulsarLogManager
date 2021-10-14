@@ -2,4 +2,4 @@
 
 while [ "$(curl -s -o /dev/null -w ''%{http_code}'' http://pulsar-mini-proxy:80/status.html)" != "200" ]; do sleep 5; done
 
-java -jar ./target/Extractor-1.0-SNAPSHOT-jar-with-dependencies.jar
+java -jar ./target/PostgresMetricsSink-1.0-SNAPSHOT-jar-with-dependencies.jar

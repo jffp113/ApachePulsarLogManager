@@ -1,3 +1,5 @@
+package entities;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -23,8 +25,22 @@ public class LogEntry {
     private String threadName;
     private String category;
     private String message;
-    private String rawMessage;
 
+    /*Specific application properties
+    E.g
+    {
+        type: "IndexerMetrics"
+        key:  "indexer_{indexerid}"
+        uuid: "123123-14234132-1243141"
+        action: ["Enqueing indexing request","Dequeued request"]
+        initial: "2021-10-07 09:10:45,888"
+        final: "2021-10-07 09:10:45,898"
+        partial_times: ["2021-10-07 09:10:45,898"]
+    }
+    */
+    private String properties;
+
+    private String rawMessage;
 
     public String getTime() {
         return time;
@@ -128,5 +144,13 @@ public class LogEntry {
 
     public void setRawMessage(String rawMessage) {
         this.rawMessage = rawMessage;
+    }
+
+    public String getProperties() {
+        return properties;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
     }
 }
