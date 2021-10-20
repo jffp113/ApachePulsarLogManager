@@ -20,7 +20,7 @@ spec:
           imagePullPolicy: Never
           env:
             - name: TOPIC
-              value: "persistent://public/default/metrics_sink"
+              value: "persistent://public/default/indexer_aggregator"
             - name: URL_SERVICE
               value: "pulsar://pulsar-mini-proxy:6650"
             - name: FLUSH_TIME
@@ -33,3 +33,15 @@ spec:
               value: "xviewer"
             - name: DB_PASSWORD
               value: "xviewer"
+            - name: MINUTE_DB_TABLE
+              value: "facts.xviewer_indexer_metrics_pulsar_mi"
+            - name: MINUTE_TABLE_CONSTRAINT
+              value: "indexer_metrics_pkey_mi"
+            - name: HOUR_DB_TABLE
+              value: "facts.xviewer_indexer_metrics_pulsar_h"
+            - name: HOUR_TABLE_CONSTRAINT
+              value: "indexer_metrics_pkey_h"
+            - name: DAY_DB_TABLE
+              value: "facts.xviewer_indexer_metrics_pulsar_d"
+            - name: DAY_TABLE_CONSTRAINT
+              value: "indexer_metrics_pkey_d"

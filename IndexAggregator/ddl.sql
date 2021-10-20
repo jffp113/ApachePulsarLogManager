@@ -8,4 +8,24 @@ CREATE TABLE facts.xviewer_indexer_metrics_pulsar_mi
     xv_count_metrictime numeric,
 
     CONSTRAINT indexer_metrics_pkey_mi PRIMARY KEY (timest, metricType)
+);
+
+CREATE TABLE facts.xviewer_indexer_metrics_pulsar_h
+(
+    timest timestamp without time zone NOT NULL,
+    metricType text COLLATE pg_catalog."default" NOT NULL,
+    avg_metrictime numeric,
+    xv_count_metrictime numeric,
+
+    CONSTRAINT indexer_metrics_pkey_h PRIMARY KEY (timest, metricType)
+);
+
+CREATE TABLE facts.xviewer_indexer_metrics_pulsar_d
+(
+    timest timestamp without time zone NOT NULL,
+    metricType text COLLATE pg_catalog."default" NOT NULL,
+    avg_metrictime numeric,
+    xv_count_metrictime numeric,
+
+    CONSTRAINT indexer_metrics_pkey_d PRIMARY KEY (timest, metricType)
 )

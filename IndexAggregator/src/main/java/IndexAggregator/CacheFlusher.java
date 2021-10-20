@@ -1,6 +1,7 @@
 package IndexAggregator;
 
 import IndexAggregator.entities.AvgMetric;
+import IndexAggregator.entities.IndexerPrecision;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -16,8 +17,11 @@ public class CacheFlusher implements Runnable{
     private final long FLUSH_TIME;
     private final long CACHE_SIZE;
     private final float EVICT_PERCENTAGE;
+    private final String TABLE_NAME;
+    private final String TABLE_CONSTRAINT;
+    private final IndexerPrecision PRECISION;
 
-    public CacheFlusher(Map<String, AvgMetric> cache) throws SQLException {
+    public CacheFlusher(Map<String, AvgMetric> cache, IndexerPrecision precision) throws SQLException {
         conn =  DriverManager.getConnection(
                 "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
         this.cache = cache;
@@ -29,6 +33,12 @@ public class CacheFlusher implements Runnable{
 
         String evictPercentageString = System.getenv("EVICT_PERCENTAGE");
         EVICT_PERCENTAGE = Float.parseFloat(evictPercentageString);
+
+        TABLE_NAME = System.getenv(precision + "_DB_TABLE");
+        TABLE_CONSTRAINT = System.getenv(precision.toString() + "_TABLE_CONSTRAINT");
+
+        PRECISION = precision;
+
     }
 
 
@@ -41,7 +51,7 @@ public class CacheFlusher implements Runnable{
             try {
                 cache.forEach((k,v) -> {
                     if (v.isUpdated()){
-                        insertToMinutesDatabase(conn,v);
+                        insertToGenericTable(conn,v);
                         v.setUpdated(false);
                     }
                     orderToDelete.add(v);
@@ -69,11 +79,13 @@ public class CacheFlusher implements Runnable{
         }
     }
 
-    private void insertToMinutesDatabase(Connection conn,AvgMetric avg){
+
+
+    private void insertToGenericTable(Connection conn,AvgMetric avg){
         System.out.println("Inserting into the database for " + avg.getTimest());
 
-        String sql = "INSERT INTO facts.xviewer_indexer_metrics_pulsar_mi VALUES (?, ?, ?, ?) " +
-                "ON CONFLICT ON CONSTRAINT indexer_metrics_pkey_mi " +
+        String sql = "INSERT INTO " + TABLE_NAME + " VALUES (?, ?, ?, ?) " +
+                "ON CONFLICT ON CONSTRAINT " + TABLE_CONSTRAINT + " " +
                 "DO UPDATE SET avg_metrictime=? , xv_count_metrictime=?";
 
         try(PreparedStatement st = conn.prepareStatement(sql)){

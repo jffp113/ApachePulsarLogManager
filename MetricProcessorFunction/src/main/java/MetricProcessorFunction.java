@@ -71,7 +71,7 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
         localState.remove(secondProp.getKey());
 
         routeToIndexerMetricProcessor(metric,context,log);
-
+        routeToIndexerAggregator(metric,context,log);
     }
 
     public void addFirstAction(IndexProperty input, Context context, Logger log){
@@ -104,11 +104,33 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
 
         MessageId msgId = msgBuilder
                             .value(metric)
+                            .property("PRECISION","MINUTE")
                             .key(metric.getTimestamp().substring(0,metric.getTimestamp().length() - 6) + "00,000")
                             .send();
 
         log.info(String.format("Routing Metric to metric sink for index:%s and action:%s with elapsed_time:%d ",
                 metric.getIndexer(),metric.getMetricType(),metric.getMetricTime()));
+
+    }
+
+    private void routeToIndexerAggregator(IndexerMetric metric, Context context, Logger log) throws Exception{
+        TypedMessageBuilder<IndexerMetric> msgBuilder =
+                context.newOutputMessage("indexer_aggregator", INDEX_METRIC_SCHEMA);
+
+        msgBuilder.value(metric)
+                .property("PRECISION","MINUTE")
+                .key(metric.getTimestamp().substring(0,metric.getTimestamp().length() - 6) + "00,000")
+                .send();
+
+        msgBuilder.value(metric)
+                .property("PRECISION","HOUR")
+                .key(metric.getTimestamp().substring(0,metric.getTimestamp().length() - 9) + "00:00,000")
+                .send();
+
+        msgBuilder.value(metric)
+                .property("PRECISION","DAY")
+                .key(metric.getTimestamp().substring(0,metric.getTimestamp().length() - 12) + "00:00:00,000")
+                .send();
     }
 
 }

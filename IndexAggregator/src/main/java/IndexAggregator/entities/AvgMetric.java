@@ -11,9 +11,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AvgMetric implements Comparable<AvgMetric>{
 
-    public enum IndexerPrecision {
-        DAY,HOUR,MINUTE
-    }
 
     public static final String INDEXER_QUEUE_TIME = "IndexerQueueMetrics";
     public static final String INDEXER_PRECESSING_TIME = "IndexerProcessingMetrics";
@@ -86,4 +83,5 @@ public class AvgMetric implements Comparable<AvgMetric>{
     public int compareTo(AvgMetric o) {
         return this.lastUpdate.compareTo(o.lastUpdate);
     }
+
 }
