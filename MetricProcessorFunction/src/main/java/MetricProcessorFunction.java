@@ -10,7 +10,9 @@ import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //This function parses log entries from Xviewer Server
 public class MetricProcessorFunction implements Function<IndexProperty, Void> {
@@ -19,9 +21,17 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
 
     public static final Gson gson = new Gson();
+
+    private static final Map<String,byte[]> localState = new HashMap<>();
+
     public Void process(IndexProperty input, Context context) throws Exception{
         Logger log = context.getLogger();
-        ByteBuffer byteBuffer = context.getState(input.getKey());
+        ByteBuffer byteBuffer = null;
+
+        if(localState.containsKey(input.getKey())){
+            byteBuffer = ByteBuffer.wrap(localState.get(input.getKey()));
+        }
+         //context.getState(input.getKey());
 
         if(byteBuffer == null){
             log.info("Trying to add a new IndexProperty entry");
@@ -58,16 +68,10 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
         metric.setMetricType(firstProp.getType());
         metric.setIndexer(firstProp.getIndex());
 
-        context.deleteState(secondProp.getKey());
+        localState.remove(secondProp.getKey());
 
         routeToIndexerMetricProcessor(metric,context,log);
-        //TODO add verification to confirm type matching
 
-        /*if(input.getType().equals(IndexProperty.PROPERTY_TYPE_1)){
-
-        }else if(input.getType().equals(IndexProperty.PROPERTY_TYPE_2)){
-
-        }*/
     }
 
     public void addFirstAction(IndexProperty input, Context context, Logger log){
@@ -83,8 +87,9 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
             firstAction.equals(IndexProperty.NOTIFY_START_PROCESSING_OF_INDEX)){
             //TODO: we could add a validate method to check the validity of the IndexProperty
             String indexPropertyJson = gson.toJson(input);
-            ByteBuffer bf = ByteBuffer.wrap(indexPropertyJson.getBytes());
-            context.putState(input.getKey(),bf);
+            localState.put(input.getKey(),indexPropertyJson.getBytes());
+            //ByteBuffer bf = ByteBuffer.wrap(indexPropertyJson.getBytes());
+            //context.putState(input.getKey(),bf);
             log.info(String.format("Added IndexProperty for action: %s index: %s",input.getAction(),input.getIndex()));
         }else{
             log.error("Invalid IndexProperty: Invalid first action");
@@ -99,6 +104,7 @@ public class MetricProcessorFunction implements Function<IndexProperty, Void> {
 
         MessageId msgId = msgBuilder
                             .value(metric)
+                            .key(metric.getTimestamp().substring(0,metric.getTimestamp().length() - 6) + "00,000")
                             .send();
 
         log.info(String.format("Routing Metric to metric sink for index:%s and action:%s with elapsed_time:%d ",

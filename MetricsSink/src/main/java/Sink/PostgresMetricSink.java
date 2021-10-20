@@ -74,7 +74,6 @@ public class PostgresMetricSink implements Sink {
                     entry = msg.getValue();
 
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
-                    //TODO remove string concatenation
                     LocalDateTime t = LocalDateTime.parse(entry.getTimestamp(),formatter);
                     String sql = "INSERT INTO facts.xviewer_indexer_metrics VALUES (?, ?, ?, ?)";
 
@@ -96,7 +95,6 @@ public class PostgresMetricSink implements Sink {
         conn.close();
 
     }
-
 
 
     public void stop() {

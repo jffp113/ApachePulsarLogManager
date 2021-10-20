@@ -17,5 +17,5 @@ CREATE TABLE facts.xviewerlogs
     properties text COLLATE pg_catalog."default" NOT NULL,
     rawMessage text COLLATE pg_catalog."default" NOT NULL,
 
-    CONSTRAINT uptime_pkey PRIMARY KEY (timest, enviroment, technology, instance,uuid)
+    CONSTRAINT logpk PRIMARY KEY (timest, enviroment, technology, instance,uuid)
 )

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexaggregator-logmanagement
+  labels:
+    app: indexaggregator-logmanagement
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexaggregator-logmanagement
+  template:
+    metadata:
+      labels:
+        app: indexaggregator-logmanagement
+    spec:
+      containers:
+        - name: indexaggregator
+          image: indexaggregator
+          imagePullPolicy: Never
+          env:
+            - name: TOPIC
+              value: "persistent://public/default/metrics_sink"
+            - name: URL_SERVICE
+              value: "pulsar://pulsar-mini-proxy:6650"
+            - name: FLUSH_TIME
+              value: "60000"
+            - name: CACHE_SIZE
+              value: "3"
+            - name: EVICT_PERCENTAGE
+              value: "0.75"
+            - name: DB_USER
+              value: "xviewer"
+            - name: DB_PASSWORD
+              value: "xviewer"
