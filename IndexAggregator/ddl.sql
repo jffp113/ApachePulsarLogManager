@@ -29,3 +29,14 @@ CREATE TABLE facts.xviewer_indexer_metrics_pulsar_d
 
     CONSTRAINT indexer_metrics_pkey_d PRIMARY KEY (timest, metricType)
 )
+
+
+--tmp database
+
+CREATE TABLE facts.xviewer_indexer_metrics_pulsar_latency
+(
+    timest timestamp without time zone NOT NULL,
+    avg_metrictime numeric,
+
+    --CONSTRAINT indexer_metrics_pkey_latency PRIMARY KEY (timest)
+)

@@ -24,13 +24,13 @@ spec:
             - name: URL_SERVICE
               value: "pulsar://pulsar-mini-proxy:6650"
             - name: FLUSH_TIME
-              value: "60000"
+              value: "120000"
             - name: CACHE_SIZE
-              value: "3"
+              value: "100"
             - name: EVICT_PERCENTAGE
               value: "0.75"
             - name: DB_USER
-              value: "xviewer"
+              value: "xviewer "
             - name: DB_PASSWORD
               value: "xviewer"
             - name: MINUTE_DB_TABLE

@@ -49,6 +49,9 @@ public class CacheFlusher implements Runnable{
             SortedSet<AvgMetric> orderToDelete = new TreeSet<>();
 
             try {
+                LocalDateTime now = LocalDateTime.now().plusHours(1);
+                long start = System.currentTimeMillis();
+
                 cache.forEach((k,v) -> {
                     if (v.isUpdated()){
                         insertToGenericTable(conn,v);
@@ -56,6 +59,9 @@ public class CacheFlusher implements Runnable{
                     }
                     orderToDelete.add(v);
                 });
+
+                long elapsed = System.currentTimeMillis() - start;
+                insertDBLatency(conn,now,elapsed);
 
                 if(cache.size() > CACHE_SIZE){
                     long nToDelete = (long) (cache.size() * EVICT_PERCENTAGE);
@@ -100,6 +106,23 @@ public class CacheFlusher implements Runnable{
 
             st.setDouble(5, avg.getAvg());
             st.setLong(6, avg.getCount());
+
+            st.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //facts.xviewer_indexer_metrics_pulsar_latency
+    private void insertDBLatency(Connection conn,LocalDateTime time, Long elapsedTime){
+        System.out.println("Took %d to send to the database" + elapsedTime);
+
+        String sql = "INSERT INTO facts.xviewer_indexer_metrics_pulsar_latency VALUES (?, ?) ;";
+
+        try(PreparedStatement st = conn.prepareStatement(sql)){
+            //Insert
+            st.setTimestamp(1, Timestamp.valueOf(time));
+            st.setLong(2, elapsedTime);
 
             st.executeUpdate();
         } catch (SQLException e) {
