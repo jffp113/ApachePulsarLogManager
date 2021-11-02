@@ -23,3 +23,13 @@ spec:
               value: "persistent://public/default/metrics_sink"
             - name: URL_SERVICE
               value: "pulsar://pulsar-mini-proxy:6650"
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: password

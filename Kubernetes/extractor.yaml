@@ -42,6 +42,17 @@ spec:
               value: "dev"
             - name: INSTANCE
               value: "1"
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: password
+
         - name: stubapp
           image: stubapp
           imagePullPolicy: Never

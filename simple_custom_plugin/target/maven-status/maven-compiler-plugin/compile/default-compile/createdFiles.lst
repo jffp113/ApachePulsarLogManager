@@ -1,0 +1,7 @@
+Main.class
+server\AuthenticationProviderSimple.class
+server\NoopAuthProvider.class
+data\AuthenticationSimpleData.class
+util\Helpers.class
+util\Helpers$1.class
+client\AuthenticationSimple.class

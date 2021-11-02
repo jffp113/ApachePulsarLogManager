@@ -3,6 +3,7 @@ package IndexAggregator;
 import IndexAggregator.entities.AvgMetric;
 import IndexAggregator.entities.IndexerMetric;
 import IndexAggregator.entities.IndexerPrecision;
+import client.AuthenticationSimple;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
@@ -45,6 +46,7 @@ public class IndexAggregatorImp implements IndexAggregator {
         client = PulsarClient.builder()
                 //connect to multiple brokers or a proxy
                 .serviceUrl(conf.getServiceURL())
+                .authentication(new AuthenticationSimple(conf.getUsername(),conf.getPassword()))
                 .build();
 
             return client;

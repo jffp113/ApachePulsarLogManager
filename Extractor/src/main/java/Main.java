@@ -10,9 +10,11 @@ public class Main {
         String env = System.getenv("ENVIRONMENT");
         String instance = System.getenv("INSTANCE");
         String technology = System.getenv("TECHNOLOGY");
-
         int timeBetweenLineReading = Integer.parseInt(System.getenv("TIME_PER_LOG"));
         //int nodeNumber = Integer.parseInt(System.getenv("NODE_NUMBER"));
+
+        String username = System.getenv("USERNAME");
+        String password = System.getenv("PASSWORD");
 
         Extractor c =  Extractor.builder()
                             .setFilepath(filePath)
@@ -22,6 +24,8 @@ public class Main {
                             .setInstance(instance)
                             .setTechnology(technology)
                             .setServiceURL(urlService)
+                            .setUsername(username)
+                            .setPassword(password)
                             .build();
         c.start();
 

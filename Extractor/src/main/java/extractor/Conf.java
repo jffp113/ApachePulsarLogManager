@@ -18,6 +18,9 @@ public class Conf {
 
     private String serviceURL;
 
+    private String username;
+    private String password;
+
     protected Conf(){
         filepath = "server.log";
         lineRegex = "*.";
@@ -82,5 +85,21 @@ public class Conf {
 
     public void setServiceURL(String serviceURL) {
         this.serviceURL = serviceURL;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

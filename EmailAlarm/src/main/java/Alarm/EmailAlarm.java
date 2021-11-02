@@ -3,6 +3,7 @@ package Alarm;
 import Alarm.emailApi.EmailSender;
 import Alarm.emailApi.MockEmailSender;
 import Alarm.entities.LogEntry;
+import client.AuthenticationSimple;
 import org.apache.pulsar.client.api.*;
 
 import java.util.concurrent.TimeUnit;
@@ -42,9 +43,12 @@ public class EmailAlarm implements Alarm{
             return client;
         }
 
+        System.out.printf("Username: %s Password: %s", conf.getUsername(), conf.getPassword());
+
         client = PulsarClient.builder()
                 //connect to multiple brokers or a proxy
                 .serviceUrl(conf.getServiceURL())
+                .authentication(new AuthenticationSimple(conf.getUsername(),conf.getPassword()))
                 .build();
 
             return client;

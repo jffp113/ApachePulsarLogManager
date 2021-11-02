@@ -8,6 +8,8 @@ public class Conf {
     private String alarmTopic;
 
     private String serviceURL;
+    private String username;
+    private String password;
 
     protected Conf(){
         timeBetweenAlarms = 0;
@@ -37,5 +39,21 @@ public class Conf {
 
     public void setServiceURL(String serviceURL) {
         this.serviceURL = serviceURL;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

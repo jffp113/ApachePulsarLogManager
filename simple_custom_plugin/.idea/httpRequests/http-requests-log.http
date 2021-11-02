@@ -1,0 +1,11 @@
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{
+  "id": "admin",
+}
+
+<> 2021-10-28T093558.200.json
+
+###
+

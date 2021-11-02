@@ -11,10 +11,15 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <pulsar.version>2.8.0</pulsar.version>
+        <pulsar.version>2.8.1</pulsar.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>pt.crossjoin</groupId>
+            <artifactId>simple_custom_plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client</artifactId>

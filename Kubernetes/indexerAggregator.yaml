@@ -45,3 +45,13 @@ spec:
               value: "facts.xviewer_indexer_metrics_pulsar_d"
             - name: DAY_TABLE_CONSTRAINT
               value: "indexer_metrics_pkey_d"
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pulsar-secret
+                  key: password

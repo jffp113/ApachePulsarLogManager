@@ -18,6 +18,16 @@ public class IndexAggregatorBuilder {
         return this;
     }
 
+    public IndexAggregatorBuilder setPassword(String password) {
+        conf.setPassword(password);
+        return this;
+    }
+
+    public IndexAggregatorBuilder setUsername(String username) {
+        conf.setUsername(username);
+        return this;
+    }
+
     public IndexAggregatorImp build(){
         return new IndexAggregatorImp(conf);
     }

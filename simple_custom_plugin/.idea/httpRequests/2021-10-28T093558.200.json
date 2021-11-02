@@ -1,0 +1,17 @@
+{
+  "args": {},
+  "data": "{\n  \"id\": \"admin\",\n}",
+  "files": {},
+  "form": {},
+  "headers": {
+    "Accept-Encoding": "gzip,deflate",
+    "Content-Length": "20",
+    "Content-Type": "application/json",
+    "Host": "httpbin.org",
+    "User-Agent": "Apache-HttpClient/4.5.13 (Java/11.0.12)",
+    "X-Amzn-Trace-Id": "Root=1-617a60ec-57ce94d05a32ab8643a5eb11"
+  },
+  "json": null,
+  "origin": "62.28.195.178",
+  "url": "https://httpbin.org/post"
+}

@@ -23,8 +23,19 @@ public class AlarmBuilder{
         return this;
     }
 
+    public AlarmBuilder setUsername(String username) {
+        conf.setUsername(username);
+        return this;
+    }
+
+    public AlarmBuilder setPassword(String username) {
+        conf.setPassword(username);
+        return this;
+    }
+
     public EmailAlarm build(){
         return new EmailAlarm(conf);
     }
+
 
 }

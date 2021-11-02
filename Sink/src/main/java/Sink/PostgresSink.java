@@ -1,6 +1,7 @@
 package Sink;
 
 import Sink.entities.LogEntry;
+import client.AuthenticationSimple;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
@@ -39,6 +40,7 @@ public class PostgresSink implements Sink {
         client = PulsarClient.builder()
                 //connect to multiple brokers or a proxy
                 .serviceUrl(conf.getServiceURL())
+                .authentication(new AuthenticationSimple(conf.getUsername(),conf.getPassword()))
                 .build();
 
             return client;

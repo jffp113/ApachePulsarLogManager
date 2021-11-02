@@ -1,5 +1,6 @@
 package extractor;
 
+import client.AuthenticationSimple;
 import org.apache.pulsar.client.api.*;
 
 import java.io.BufferedReader;
@@ -39,11 +40,14 @@ public class Extractor {
             return client;
         }
 
+        System.out.printf("Creating client username: %s password: %s",conf.getUsername(),conf.getPassword());
         client = PulsarClient.builder()
                 //connect to multiple brokers or a proxy
                 //e.g pulsar://pulsar-mini-proxy:6650
                 .serviceUrl(conf.getServiceURL())
+                .authentication(new AuthenticationSimple(conf.getUsername(),conf.getPassword()))
                 .build();
+
 
             return client;
     }

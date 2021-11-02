@@ -18,6 +18,16 @@ public class SinkBuilder {
         return this;
     }
 
+    public SinkBuilder setUsername(String username) {
+        conf.setUsername(username);
+        return this;
+    }
+
+    public SinkBuilder setPassword(String password) {
+        conf.setPassword(password);
+        return this;
+    }
+
     public PostgresSink build(){
         return new PostgresSink(conf);
     }

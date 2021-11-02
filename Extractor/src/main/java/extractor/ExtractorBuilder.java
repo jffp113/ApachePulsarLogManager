@@ -43,6 +43,16 @@ public class ExtractorBuilder {
         return this;
     }
 
+    public ExtractorBuilder setUsername(String username) {
+        conf.setUsername(username);
+        return this;
+    }
+
+    public ExtractorBuilder setPassword(String password) {
+        conf.setPassword(password);
+        return this;
+    }
+
     public Extractor build(){
         return new Extractor(conf);
     }

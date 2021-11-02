@@ -1,6 +1,7 @@
 package Sink;
 
 import Sink.entities.IndexerMetric;
+import client.AuthenticationSimple;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
@@ -36,9 +37,11 @@ public class PostgresMetricSink implements Sink {
             return client;
         }
 
+        System.out.printf("Creating client username: %s password: %s\n",conf.getUsername(),conf.getPassword());
         client = PulsarClient.builder()
                 //connect to multiple brokers or a proxy
                 .serviceUrl(conf.getServiceURL())
+                .authentication(new AuthenticationSimple(conf.getUsername(),conf.getPassword()))
                 .build();
 
             return client;
