@@ -13,11 +13,18 @@ spec:
     metadata:
       labels:
         app: metricssink-logmanagement
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: metricssink
           image: metricssink
           imagePullPolicy: Never
+          # prometheus needs to access /metrics endpoint
+          ports:
+          - name: http
+            containerPort: 8080
           env:
             - name: SINK_TOPIC
               value: "persistent://public/default/metrics_sink"

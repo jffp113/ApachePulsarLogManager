@@ -1,11 +1,13 @@
 package Sink;
 
 import Sink.entities.IndexerMetric;
+import io.prometheus.client.Summary;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 public class PostgresMetricSink implements Sink {
 
@@ -19,6 +21,10 @@ public class PostgresMetricSink implements Sink {
     Consumer<IndexerMetric> producer;
 
     boolean keepPulling;
+
+    static final Summary requestLatency = Summary.build()
+            .name("requests_start_to_metric_latency_miliseconds")
+            .help("Request latency between start to metric sink in miliseconds.").register();
 
     public static SinkBuilder builder(){
         return new SinkBuilder();
@@ -84,6 +90,9 @@ public class PostgresMetricSink implements Sink {
                     st.setLong(4, entry.getMetricTime());
 
                     st.executeUpdate();
+
+                    System.out.println(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
+                    requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message
                     consumer.acknowledge(msg);

@@ -4,6 +4,7 @@ metadata:
   name: sink-logmanagement
   labels:
     app: sink-logmanagement
+    expose_prometheous: "true"
 spec:
   replicas: 1
   selector:
@@ -13,11 +14,18 @@ spec:
     metadata:
       labels:
         app: sink-logmanagement
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: sink
           image: sink
           imagePullPolicy: Never
+          ports:
+          # prometheus needs to access /metrics endpoint
+          - name: http
+            containerPort: 8080
           env:
             - name: SINK_TOPIC
               value: "persistent://public/default/parsed_logs"

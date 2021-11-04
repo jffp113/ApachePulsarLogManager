@@ -1,11 +1,13 @@
 package Sink;
 
 import Sink.entities.LogEntry;
+import io.prometheus.client.Summary;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 public class PostgresSink implements Sink {
 
@@ -19,6 +21,10 @@ public class PostgresSink implements Sink {
     Consumer<LogEntry> producer;
 
     boolean keepPulling;
+
+    static final Summary requestLatency = Summary.build()
+            .name("requests_start_to_logsink_latency_miliseconds")
+            .help("Request latency between start to log sink in miliseconds.").register();
 
     public static SinkBuilder builder(){
         return new SinkBuilder();
@@ -97,6 +103,8 @@ public class PostgresSink implements Sink {
 
                     st.setString(13, entry.getRawMessage()); // raw message
                     st.executeUpdate();
+
+                    requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message
                     consumer.acknowledge(msg);

@@ -13,11 +13,17 @@ spec:
     metadata:
       labels:
         app: indexaggregator-logmanagement
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: indexaggregator
           image: indexaggregator
           imagePullPolicy: Never
+          ports:
+          - name: http
+            containerPort: 8080
           env:
             - name: TOPIC
               value: "persistent://public/default/indexer_aggregator"

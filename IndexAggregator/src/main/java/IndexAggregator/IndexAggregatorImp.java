@@ -3,6 +3,7 @@ package IndexAggregator;
 import IndexAggregator.entities.AvgMetric;
 import IndexAggregator.entities.IndexerMetric;
 import IndexAggregator.entities.IndexerPrecision;
+import io.prometheus.client.Counter;
 import org.apache.pulsar.client.api.*;
 
 import java.sql.*;
@@ -25,6 +26,7 @@ public class IndexAggregatorImp implements IndexAggregator {
     Consumer<IndexerMetric> producer;
 
     boolean keepPulling;
+
 
     public static IndexAggregatorBuilder builder(){
         return new IndexAggregatorBuilder();
@@ -119,9 +121,11 @@ public class IndexAggregatorImp implements IndexAggregator {
     private AvgMetric getAvgValue(Connection conn, String key, IndexerPrecision precision){
         AvgMetric avg = getFromPrecisionCache(key,precision);
         if(avg != null){
+            Metrics.add_cache_hit(precision);
             System.out.println("Value for " + key + "served from cache");
             return avg;
         }
+        Metrics.add_cache_misses(precision);
         avg = getFromDatabaseCache(conn,key,precision);
         putOnPrecisionCache(avg,key,precision);
         return avg;
@@ -204,7 +208,6 @@ public class IndexAggregatorImp implements IndexAggregator {
         return new AvgMetric(key,"",0,0,
                 LocalDateTime.now(),precision,false);
     }
-
 
     public void stop() {
         this.keepPulling = false;
