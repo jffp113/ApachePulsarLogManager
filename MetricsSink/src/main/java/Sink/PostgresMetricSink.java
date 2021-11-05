@@ -70,7 +70,7 @@ public class PostgresMetricSink implements Sink {
     public void start() throws Exception {
         Consumer<IndexerMetric> consumer = getProducer();
         Connection conn = DriverManager.getConnection(
-                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
+                conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
         IndexerMetric entry = null;
         while(keepPulling){
             try {
@@ -91,7 +91,6 @@ public class PostgresMetricSink implements Sink {
 
                     st.executeUpdate();
 
-                    System.out.println(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
                     requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message

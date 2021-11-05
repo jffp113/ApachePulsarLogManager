@@ -18,6 +18,23 @@ public class IndexAggregatorBuilder {
         return this;
     }
 
+
+    public IndexAggregatorBuilder setDBurl(String url) {
+        conf.setDB_url(url);
+        return this;
+    }
+
+    public IndexAggregatorBuilder setDBuser(String username) {
+        conf.setDB_user(username);
+        return this;
+    }
+
+    public IndexAggregatorBuilder setDBpassword(String password) {
+        conf.setDB_password(password);
+        return this;
+    }
+
+
     public IndexAggregatorImp build(){
         return new IndexAggregatorImp(conf);
     }

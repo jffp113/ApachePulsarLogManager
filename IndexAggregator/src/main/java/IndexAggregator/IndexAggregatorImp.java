@@ -77,15 +77,15 @@ public class IndexAggregatorImp implements IndexAggregator {
         Consumer<IndexerMetric> consumer = getProducer();
         //TODO credentials should be in env variables with kubernetes secrets
         Connection conn = DriverManager.getConnection(
-                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
+                conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
         IndexerMetric entry = null;
-        Thread cacheFlusherMi = new Thread(new CacheFlusher(minuteCache, IndexerPrecision.MINUTE));
+        Thread cacheFlusherMi = new Thread(new CacheFlusher(minuteCache, IndexerPrecision.MINUTE,conf));
         cacheFlusherMi.start();
 
-        Thread cacheFlusherHr = new Thread(new CacheFlusher(hoursCache, IndexerPrecision.HOUR));
+        Thread cacheFlusherHr = new Thread(new CacheFlusher(hoursCache, IndexerPrecision.HOUR,conf));
         cacheFlusherHr.start();
 
-        Thread cacheFlusherD = new Thread(new CacheFlusher(daysCache, IndexerPrecision.DAY));
+        Thread cacheFlusherD = new Thread(new CacheFlusher(daysCache, IndexerPrecision.DAY,conf));
         cacheFlusherD.start();
 
         while(keepPulling){

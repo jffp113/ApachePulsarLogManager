@@ -26,6 +26,9 @@ spec:
           # prometheus needs to access /metrics endpoint
           - name: http
             containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: xviewer-configs
           env:
             - name: SINK_TOPIC
               value: "persistent://public/default/parsed_logs"

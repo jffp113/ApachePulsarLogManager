@@ -70,7 +70,7 @@ public class PostgresSink implements Sink {
     public void start() throws Exception {
         Consumer<LogEntry> consumer = getProducer();
         Connection conn = DriverManager.getConnection(
-                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
+                conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
         LogEntry entry = null;
         while(keepPulling){
             try {

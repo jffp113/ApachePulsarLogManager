@@ -21,9 +21,10 @@ public class CacheFlusher implements Runnable{
     private final String TABLE_CONSTRAINT;
     private final IndexerPrecision PRECISION;
 
-    public CacheFlusher(Map<String, AvgMetric> cache, IndexerPrecision precision) throws SQLException {
+    public CacheFlusher(Map<String, AvgMetric> cache, IndexerPrecision precision, Conf conf) throws SQLException {
         conn =  DriverManager.getConnection(
-                "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2", "xviewer", "xviewer");
+                conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
+
         this.cache = cache;
         String flushTimeString = System.getenv("FLUSH_TIME");
         FLUSH_TIME = Long.parseLong(flushTimeString);

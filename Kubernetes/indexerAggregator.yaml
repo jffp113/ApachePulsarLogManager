@@ -24,6 +24,9 @@ spec:
           ports:
           - name: http
             containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: xviewer-configs
           env:
             - name: TOPIC
               value: "persistent://public/default/indexer_aggregator"
@@ -35,10 +38,6 @@ spec:
               value: "100"
             - name: EVICT_PERCENTAGE
               value: "0.75"
-            - name: DB_USER
-              value: "xviewer "
-            - name: DB_PASSWORD
-              value: "xviewer"
             - name: MINUTE_DB_TABLE
               value: "facts.xviewer_indexer_metrics_pulsar_mi"
             - name: MINUTE_TABLE_CONSTRAINT
