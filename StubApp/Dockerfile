@@ -7,7 +7,7 @@ RUN curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-${
                  -C /usr/local/bin docker/docker \
   && rm docker-${DOCKERVERSION}.tgz
 
-#COPY /home/${USER}/.ssh/id_rsa /root/.ssh/id_rsa.pub
+COPY ./id_rsa /root/.ssh/id_rsa
 COPY ./start.sh . 
 RUN chmod +x start.sh
 RUN mkdir logs

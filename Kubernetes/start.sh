@@ -7,10 +7,10 @@ docker build -f ./../Sink/Dockerfile -t sink ./../Sink
 docker build -f ./../MetricsSink/Dockerfile -t metricssink ./../MetricsSink
 docker build -f ./../IndexAggregator/Dockerfile -t indexaggregator ./../IndexAggregator
 
-kubectl apply -f xviewer-configs.yaml
+kubectl apply -f xviewer_configmap.yaml
 kubectl apply -f extractor.yaml
 kubectl apply -f sink.yaml
 kubectl apply -f metricssink.yaml
 kubectl apply -f alarms.yaml
 kubectl apply -f indexerAggregator.yaml
-kubectl apply -f xviewer_configmap.yaml
+#kubectl apply -f xviewer_configmap.yaml

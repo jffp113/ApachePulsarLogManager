@@ -5,4 +5,4 @@ metadata:
 data:
   DB_USER: "xviewer"
   DB_PASSWORD: "xviewer"
-  DB_URL: "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2"
+  DB_URL: "jdbc:postgresql://192.168.0.252:5432/xviewer-r2"

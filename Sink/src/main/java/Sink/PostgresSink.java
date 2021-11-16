@@ -104,6 +104,7 @@ public class PostgresSink implements Sink {
                     st.setString(13, entry.getRawMessage()); // raw message
                     st.executeUpdate();
 
+		    System.out.println(t + " " + LocalDateTime.now() + " " + ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
                     requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message
