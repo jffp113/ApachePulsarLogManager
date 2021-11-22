@@ -8,6 +8,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 public class PostgresSink implements Sink {
 
@@ -55,13 +56,19 @@ public class PostgresSink implements Sink {
             return producer;
         }
 
+        BatchReceivePolicy batchPolicy = BatchReceivePolicy.builder()
+                                .timeout(conf.getBatchTimeout(), TimeUnit.MILLISECONDS)
+                                .maxNumBytes(conf.getBatchMaxBytes())
+                                .maxNumMessages(conf.getBatchMaxMessages())
+                                .build();
+
         producer = getClient()
                     .newConsumer(Schema.JSON(LogEntry.class))
                     .topic(conf.getSinkTopic())
                     .subscriptionName("postgres_sink")
                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     .subscriptionType(SubscriptionType.Shared)
-                    .batchReceivePolicy(BatchReceivePolicy.DEFAULT_POLICY)
+                    .batchReceivePolicy(batchPolicy)
                     .subscribe();
 
         return producer;
@@ -75,6 +82,8 @@ public class PostgresSink implements Sink {
         while(keepPulling){
             try {
                 Messages<LogEntry> logEntries = consumer.batchReceive();
+                String sql = "INSERT INTO facts.xviewerlogs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement st = conn.prepareStatement(sql);
                 for(Message<LogEntry> msg : logEntries){
                     //TODO isolate the database insertion
                     entry = msg.getValue();
@@ -82,8 +91,7 @@ public class PostgresSink implements Sink {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
                     //TODO remove string concatenation
                     LocalDateTime t = LocalDateTime.parse(entry.getDate() + " " + entry.getTime(),formatter);
-                    String sql = "INSERT INTO facts.xviewerlogs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                    PreparedStatement st = conn.prepareStatement(sql);
+
                     st.setTimestamp(1, Timestamp.valueOf(t));
                     st.setString(2, entry.getEnvironment()); // env
                     st.setString(3, entry.getTechnology()); // tech
@@ -102,14 +110,15 @@ public class PostgresSink implements Sink {
                     }
 
                     st.setString(13, entry.getRawMessage()); // raw message
-                    st.executeUpdate();
-
+                    st.addBatch();
 		    System.out.println(t + " " + LocalDateTime.now() + " " + ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
                     requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message
                     consumer.acknowledge(msg);
                 }
+
+                st.executeUpdate();
             } catch (SQLException e) {
                 System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
                 System.err.format("Entry uuid %s value %s\n",entry.getUuid(),entry.getRawMessage());

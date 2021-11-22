@@ -36,6 +36,12 @@ spec:
               value: "persistent://public/default/parsed_logs"
             - name: URL_SERVICE
               value: "pulsar://pulsar-mini-proxy:6650"
+            - name: BATCH_MAX_MESSAGES
+              value: -1
+            - name: BATCH_TIMEOUT
+              value: 100
+            - name: BATCH_MAX_SIZE
+              value: 10485760
         - name: exporter-merger  
           image: quay.io/rebuy/exporter-merger:v0.2.0
           ports:
