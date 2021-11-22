@@ -118,7 +118,10 @@ public class PostgresSink implements Sink {
                     consumer.acknowledge(msg);
                 }
 
-                st.executeUpdate();
+                if(logEntries.size() != 0){
+                    st.executeUpdate();
+                }
+
             } catch (SQLException e) {
                 System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
                 System.err.format("Entry uuid %s value %s\n",entry.getUuid(),entry.getRawMessage());
