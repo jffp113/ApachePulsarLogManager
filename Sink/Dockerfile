@@ -4,6 +4,8 @@ COPY ./pom.xml /project
 #RUN mvn dependency:go-offline
 COPY src /project/src
 COPY start.sh /project/
+COPY config.yaml /project/
+COPY ./jmx_prometheus_javaagent-0.16.1.jar /project/
 RUN chmod +x start.sh
 RUN mvn clean package -DskipTests
 CMD ["./start.sh"]

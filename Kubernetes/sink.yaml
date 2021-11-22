@@ -16,7 +16,7 @@ spec:
         app: sink-logmanagement
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: "8081"
     spec:
       containers:
         - name: sink
@@ -26,6 +26,8 @@ spec:
           # prometheus needs to access /metrics endpoint
           - name: http
             containerPort: 8080
+          - name: jvm
+            containerPort: 9000
           envFrom:
             - configMapRef:
                 name: xviewer-configs
@@ -34,3 +36,13 @@ spec:
               value: "persistent://public/default/parsed_logs"
             - name: URL_SERVICE
               value: "pulsar://pulsar-mini-proxy:6650"
+        - name: exporter-merger  
+          image: quay.io/rebuy/exporter-merger:v0.2.0
+          ports:
+           - containerPort: 8081
+          env:
+          # space-separated list of URLs
+           - name: MERGER_PORT
+             value: "8081"
+           - name: MERGER_URLS
+             value: http://localhost:9000/metrics http://localhost:8080/metrics
