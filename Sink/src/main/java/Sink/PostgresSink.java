@@ -119,7 +119,7 @@ public class PostgresSink implements Sink {
                 }
 
                 if(logEntries.size() != 0){
-                    st.executeUpdate();
+                    st.executeBatch();
                 }
 
             } catch (SQLException e) {
