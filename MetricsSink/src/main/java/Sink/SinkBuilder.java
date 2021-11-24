@@ -33,6 +33,21 @@ public class SinkBuilder {
         return this;
     }
 
+    public SinkBuilder setBatchMaxBytes(int bytes) {
+        conf.setBatchMaxBytes(bytes);
+        return this;
+    }
+
+    public SinkBuilder setBatchMaxMessages(int messages) {
+        conf.setBatchMaxMessages(messages);
+        return this;
+    }
+
+    public SinkBuilder setBatchTimeout(int timeout) {
+        conf.setBatchTimeout(timeout);
+        return this;
+    }
+
     public PostgresMetricSink build(){
         return new PostgresMetricSink(conf);
     }

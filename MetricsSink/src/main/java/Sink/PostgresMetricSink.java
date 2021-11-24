@@ -8,6 +8,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 
 public class PostgresMetricSink implements Sink {
 
@@ -55,13 +56,19 @@ public class PostgresMetricSink implements Sink {
             return producer;
         }
 
+        BatchReceivePolicy batchPolicy = BatchReceivePolicy.builder()
+                .timeout(conf.getBatchTimeout(), TimeUnit.MILLISECONDS)
+                .maxNumBytes(conf.getBatchMaxBytes())
+                .maxNumMessages(conf.getBatchMaxMessages())
+                .build();
+
         producer = getClient()
                     .newConsumer(Schema.JSON(IndexerMetric.class))
                     .topic(conf.getSinkTopic())
                     .subscriptionName("postgres_sink")
                     .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                     .subscriptionType(SubscriptionType.Shared)
-                    .batchReceivePolicy(BatchReceivePolicy.DEFAULT_POLICY)
+                    .batchReceivePolicy(batchPolicy)
                     .subscribe();
 
         return producer;
@@ -75,27 +82,33 @@ public class PostgresMetricSink implements Sink {
         while(keepPulling){
             try {
                 Messages<IndexerMetric> logEntries = consumer.batchReceive();
+                String sql = "INSERT INTO facts.xviewer_indexer_metrics VALUES (?, ?, ?, ?)";
+                PreparedStatement st = conn.prepareStatement(sql);
+
                 for(Message<IndexerMetric> msg : logEntries){
                     //TODO isolate the database insertion
                     entry = msg.getValue();
 
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
                     LocalDateTime t = LocalDateTime.parse(entry.getTimestamp(),formatter);
-                    String sql = "INSERT INTO facts.xviewer_indexer_metrics VALUES (?, ?, ?, ?)";
 
-                    PreparedStatement st = conn.prepareStatement(sql);
                     st.setTimestamp(1, Timestamp.valueOf(t));
                     st.setString(2, entry.getMetricType());
                     st.setString(3, entry.getIndexer());
                     st.setLong(4, entry.getMetricTime());
 
-                    st.executeUpdate();
+                    st.addBatch();
 
                     requestLatency.observe(ChronoUnit.MILLIS.between(t,LocalDateTime.now()));
 
                     //Ack the message
                     consumer.acknowledge(msg);
                 }
+
+                if(logEntries.size() != 0){
+                    st.executeBatch();
+                }
+
             } catch (SQLException e) {
                 System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
             }

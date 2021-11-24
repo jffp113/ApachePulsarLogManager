@@ -13,7 +13,7 @@ public class MainScript {
                 "xviewer", "xviewer");
 
         while(true){
-            String sql = "SELECT count(*) FROM facts.xviewerlogs WHERE timest > '2021-11-23 13:00:07.00'";
+            String sql = "SELECT count(*) FROM facts.xviewerlogs WHERE timest > '2021-11-23 15:53:00.00'";
             System.out.println("Executing query");
             PreparedStatement st = conn.prepareStatement(sql);
             ResultSet rs = st.executeQuery();

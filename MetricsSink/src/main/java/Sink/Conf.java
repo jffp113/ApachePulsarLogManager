@@ -10,6 +10,10 @@ public class Conf {
     private String DB_password;
     private String DB_url;
 
+    private int batchMaxMessages;
+    private int batchTimeout;
+    private int batchMaxBytes;
+
 
     protected Conf(){
         serviceURL = "pulsar://localhost:6650";
@@ -17,6 +21,10 @@ public class Conf {
         DB_user = "xviewer";
         DB_password = "xviewer";
         DB_url = "jdbc:postgresql://host.minikube.internal:5432/xviewer-r2";
+
+        batchMaxBytes = 10 * 1024 * 1024;
+        batchTimeout = 100;
+        batchMaxMessages = -1;
     }
 
     public String getDB_user() {
@@ -57,5 +65,29 @@ public class Conf {
 
     public void setServiceURL(String serviceURL) {
         this.serviceURL = serviceURL;
+    }
+
+    public int getBatchMaxMessages() {
+        return batchMaxMessages;
+    }
+
+    public void setBatchMaxMessages(int batchMaxMessages) {
+        this.batchMaxMessages = batchMaxMessages;
+    }
+
+    public int getBatchTimeout() {
+        return batchTimeout;
+    }
+
+    public void setBatchTimeout(int batchTimeout) {
+        this.batchTimeout = batchTimeout;
+    }
+
+    public int getBatchMaxBytes() {
+        return batchMaxBytes;
+    }
+
+    public void setBatchMaxBytes(int batchMaxBytes) {
+        this.batchMaxBytes = batchMaxBytes;
     }
 }
