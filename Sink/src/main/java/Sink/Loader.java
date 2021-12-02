@@ -1,6 +1,7 @@
 package Sink;
 
 import Sink.entities.LogEntry;
+import io.prometheus.client.Summary;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -10,8 +11,15 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 public class Loader implements Runnable{
+
+
+    static final Summary requestLatency = Summary.build()
+            .name("requests_start_to_logsink_latency_miliseconds")
+            .help("Request latency between start to log sink in miliseconds.").register();
+
 
     private final Context ctx;
     private final Messages<LogEntry> logEntries;
@@ -25,7 +33,6 @@ public class Loader implements Runnable{
 
     @Override
     public void run() {
-        System.out.println("Loading batch");
         LogEntry entry = null;
         //Check invariant
         if(logEntries.size() == 0){
@@ -50,6 +57,7 @@ public class Loader implements Runnable{
                 st.setString(9, entry.getThreadName()); // threadName
                 st.setString(10, entry.getCategory()); // category
                 st.setString(11, entry.getMessage()); // message
+
                 if(entry.getProperties() == null) {
                     st.setString(12, "");// properties
                 } else{
@@ -59,6 +67,8 @@ public class Loader implements Runnable{
                 st.setString(13, entry.getRawMessage()); // raw message
                 st.addBatch();
 
+                long elapsed_time = ChronoUnit.MILLIS.between(t,LocalDateTime.now());
+                requestLatency.observe(elapsed_time);
             }
 
             st.executeBatch();

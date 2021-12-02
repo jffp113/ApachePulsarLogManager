@@ -11,7 +11,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PostgresSink implements Sink {
-
     //Sidecar configuration
     private final Conf conf;
 
@@ -24,10 +23,6 @@ public class PostgresSink implements Sink {
     Consumer<LogEntry> consumer;
 
     boolean keepPulling;
-
-    static final Summary requestLatency = Summary.build()
-            .name("requests_start_to_logsink_latency_miliseconds")
-            .help("Request latency between start to log sink in miliseconds.").register();
 
     private Thread extractorTranformerThread;
 
@@ -78,23 +73,8 @@ public class PostgresSink implements Sink {
         return consumer;
     }
 
-    //Extract
-    //Transformation
-    //Load
-
-    //BlockingQueue tasks = new ArrayBlockingQueue(size)
-    //ExecutorService executor = Executors.newFixedThreadPool(10)
-
-
-    //Extract
-    //Just Pull data
-
-    //Transformation and Load
-    //Load to the database
-
 
     public void start() throws Exception {
-        //Consumer<LogEntry> consumer = getConsumer();
         Connection conn = DriverManager.getConnection(
                 conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
 
@@ -113,7 +93,7 @@ public class PostgresSink implements Sink {
 
 
     public void stop() {
-
+        ctx.close();
     }
 
 }
