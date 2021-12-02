@@ -7,8 +7,8 @@ import org.apache.pulsar.client.api.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PostgresSink implements Sink {
 
@@ -19,13 +19,15 @@ public class PostgresSink implements Sink {
     PulsarClient client;
 
     //Consumer to read logs
-    Consumer<LogEntry> producer;
+    Consumer<LogEntry> consumer;
 
     boolean keepPulling;
 
     static final Summary requestLatency = Summary.build()
             .name("requests_start_to_logsink_latency_miliseconds")
             .help("Request latency between start to log sink in miliseconds.").register();
+
+    private Thread extractorTranformerThread;
 
     public static SinkBuilder builder(){
         return new SinkBuilder();
@@ -34,7 +36,7 @@ public class PostgresSink implements Sink {
     protected PostgresSink(Conf conf){
         this.conf = conf;
         client = null;
-        producer = null;
+        consumer = null;
         keepPulling = true;
     }
 
@@ -51,9 +53,9 @@ public class PostgresSink implements Sink {
             return client;
     }
 
-    private synchronized Consumer<LogEntry> getProducer() throws PulsarClientException {
-        if (producer != null) {
-            return producer;
+    private synchronized Consumer<LogEntry> getConsumer() throws PulsarClientException {
+        if (consumer != null) {
+            return consumer;
         }
 
         BatchReceivePolicy batchPolicy = BatchReceivePolicy.builder()
@@ -62,7 +64,7 @@ public class PostgresSink implements Sink {
                                 .maxNumMessages(conf.getBatchMaxMessages())
                                 .build();
 
-        producer = getClient()
+        consumer = getClient()
                     .newConsumer(Schema.JSON(LogEntry.class))
                     .topic(conf.getSinkTopic())
                     .subscriptionName("postgres_sink")
@@ -71,61 +73,41 @@ public class PostgresSink implements Sink {
                     .batchReceivePolicy(batchPolicy)
                     .subscribe();
 
-        return producer;
+        return consumer;
     }
 
+    //Extract
+    //Transformation
+    //Load
+
+    //BlockingQueue tasks = new ArrayBlockingQueue(size)
+    //ExecutorService executor = Executors.newFixedThreadPool(10)
+
+
+    //Extract
+    //Just Pull data
+
+    //Transformation and Load
+    //Load to the database
+
+
     public void start() throws Exception {
-        Consumer<LogEntry> consumer = getProducer();
+        //Consumer<LogEntry> consumer = getConsumer();
         Connection conn = DriverManager.getConnection(
                 conf.getDB_url(), conf.getDB_user(), conf.getDB_password());
-        LogEntry entry = null;
-        while(keepPulling){
-            try {
-                Messages<LogEntry> logEntries = consumer.batchReceive();
-                String sql = "INSERT INTO facts.xviewerlogs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement st = conn.prepareStatement(sql);
-                for(Message<LogEntry> msg : logEntries){
-                    //TODO isolate the database insertion
-                    entry = msg.getValue();
 
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS");
-                    //TODO remove string concatenation
-                    LocalDateTime t = LocalDateTime.parse(entry.getDate() + " " + entry.getTime(),formatter);
+        BlockingQueue<Runnable> tasks = new ArrayBlockingQueue<>(50);
+        ExecutorService executor = new ThreadPoolExecutor(5,10,5,TimeUnit.SECONDS,tasks);
 
-                    st.setTimestamp(1, Timestamp.valueOf(t));
-                    st.setString(2, entry.getEnvironment()); // env
-                    st.setString(3, entry.getTechnology()); // tech
-                    st.setString(4, entry.getInstance()); // instance
-                    st.setString(5, entry.getUuid()); // uuid
-                    st.setString(6, entry.getFileName()); // filename
-                    st.setLong(7, entry.getSeqNumber()); // seqNumber
-                    st.setString(8, entry.getSeverity()); // severity
-                    st.setString(9, entry.getThreadName()); // threadName
-                    st.setString(10, entry.getCategory()); // category
-                    st.setString(11, entry.getMessage()); // message
-                    if(entry.getProperties() == null) {
-                        st.setString(12, "");// properties
-                    } else{
-                        st.setString(12, entry.getProperties()); // properties
-                    }
+        Context ctx = new Context(getClient(), getConsumer(),new AtomicBoolean(true),conn,tasks,executor);
 
-                    st.setString(13, entry.getRawMessage()); // raw message
-                    st.addBatch();
 
-                    //Ack the message
-                    consumer.acknowledge(msg);
-                }
+        ExtractorTransformer extractorTransformer = new ExtractorTransformer(ctx);
+        this.extractorTranformerThread = new Thread(extractorTransformer);
+        this.extractorTranformerThread.start();
 
-                if(logEntries.size() != 0){
-                    st.executeBatch();
-                }
 
-            } catch (SQLException e) {
-                System.err.format("SQL State: %s\n%s\n", e.getSQLState(), e.getMessage());
-                System.err.format("Entry uuid %s value %s\n",entry.getUuid(),entry.getRawMessage());
-            }
-        }
-        conn.close();
+
 
     }
 
