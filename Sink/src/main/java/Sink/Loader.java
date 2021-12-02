@@ -25,6 +25,7 @@ public class Loader implements Runnable{
 
     @Override
     public void run() {
+        System.out.println("Loading batch");
         LogEntry entry = null;
         //Check invariant
         if(logEntries.size() == 0){

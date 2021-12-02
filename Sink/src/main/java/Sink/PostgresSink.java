@@ -15,6 +15,8 @@ public class PostgresSink implements Sink {
     //Sidecar configuration
     private final Conf conf;
 
+    private Context ctx;
+
     //Apache Pulsar client
     PulsarClient client;
 
@@ -99,22 +101,20 @@ public class PostgresSink implements Sink {
         BlockingQueue<Runnable> tasks = new ArrayBlockingQueue<>(50);
         ExecutorService executor = new ThreadPoolExecutor(5,10,5,TimeUnit.SECONDS,tasks);
 
-        Context ctx = new Context(getClient(), getConsumer(),new AtomicBoolean(true),conn,tasks,executor);
-
+        ctx = new Context(getClient(), getConsumer(),new AtomicBoolean(true),conn,tasks,executor);
 
         ExtractorTransformer extractorTransformer = new ExtractorTransformer(ctx);
         this.extractorTranformerThread = new Thread(extractorTransformer);
         this.extractorTranformerThread.start();
 
 
-
-
+        this.extractorTranformerThread.join();
     }
 
 
 
     public void stop() {
-        this.keepPulling = false;
+
     }
 
 }

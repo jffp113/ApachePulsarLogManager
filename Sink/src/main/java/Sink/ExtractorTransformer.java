@@ -13,18 +13,20 @@ public class ExtractorTransformer implements Runnable{
 
     @Override
     public void run() {
+        System.out.println("Starting ExtractorTransformer");
         try{
             while(ctx.keepPulling.get()){
                 try{
                     Messages<LogEntry> messages = ctx.receiveBatch();
                     if(messages.size() > 0){
+                        System.out.println("Submitting messages");
                         ctx.putMessagesOnQueue(messages);
                     }
-                }catch (PulsarClientException e){
+                } catch (PulsarClientException e){
                     System.out.println("Unable to get Batch");
                 }
             }
-        }catch (InterruptedException e){
+        } catch (InterruptedException e){
             System.out.println("ExtractorTransformer stopped");
         }
     }
