@@ -100,7 +100,6 @@ public class PostgresSink implements Sink {
 
         BlockingQueue<Runnable> tasks = new ArrayBlockingQueue<>(50);
         ExecutorService executor = new ThreadPoolExecutor(5,10,5,TimeUnit.SECONDS,tasks);
-
         ctx = new Context(getClient(), getConsumer(),new AtomicBoolean(true),conn,tasks,executor);
 
         ExtractorTransformer extractorTransformer = new ExtractorTransformer(ctx);

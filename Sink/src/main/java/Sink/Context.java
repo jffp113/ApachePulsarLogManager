@@ -42,7 +42,8 @@ public class Context {
     }
 
     public void putMessagesOnQueue(Messages<LogEntry> messages) throws InterruptedException{
-        tasks.put(new Loader(this,messages));
+        executor.submit(new Loader(this,messages));
+        //tasks.put();
     }
 
     public void ackMessages(Messages<LogEntry> entries) throws PulsarClientException  {
